@@ -4,7 +4,7 @@
 #include <string.h>
 
 /* ******************************************************************
- ALTERNATING BIT AND GO-BACK-N NETWORK EMULATOR: 
+ ALTERNATING BIT AND GO-Back_number-N NETWORK EMULATOR: 
      VERSION 1.1  J.F.Kurose
      Revised 1.2  D.R.Figueiredo
 
@@ -31,8 +31,8 @@ struct msg {
 /* 3 (teachers code).  Note the pre-defined packet structure, which all   */
 /* students must follow. */
 struct pkt {
-   int seqnum;
-   int acknum;
+   int sequenceNumbernum;
+   int ack_numbernum;
    int checksum;
    char payload[20];
     };
@@ -43,23 +43,23 @@ void stoptimer(int);
 void tolayer3(int,struct pkt);
 void tolayer5(int, struct msg);
 int check_checksum(struct pkt);
-int generate_checksum(struct pkt);
+int make_checksum(struct pkt);
 int flip_number(int);
 /********* STUDENTS WRITE THE NEXT SEVEN ROUTINES *********/
 
 #define A 0
 #define B 1
 #define TIMER 20
-#define MESSAGE_SIZE 20
+#define MSG_LENGTH 20
 
-int A_STATE = 0;
-int B_STATE = 0;
+int StateOfA = 0;
+int StateOfB = 0;
 
 int count = 0;
 
 int ACK = 0;
-int SEQ = 0;
-int prev_sequence_number;
+int sequenceNumber = 0;
+int prevsequenceNumber;
 struct msg prev_message;
 struct pkt prev_packet;
 struct pkt B_prev_packet;
@@ -69,26 +69,25 @@ data is accepted for transmission, negative number otherwise */
 int A_output(message)
   struct msg message;
 {
-    //check if we are waiting for ack?
+    //check if we are waiting for ACK?
     //return -1
     //printf("\n#####################################\nTHIS IS THE MESSAGE FROM THE UPPER LAYERS\n%s\n#####################################\n",message.data);
-    if(A_STATE){
-        printf("\n#####################################\nA is currently waiting for an ACK# %d\n#####################################\n",ACK);
+    if(StateOfA){
+        printf("A is currently waiting for an ACK# %d\n",ACK);
         return -1;
     }else{
         //Build the packet
         struct pkt packet;
         strcpy(packet.payload,message.data);
-        packet.seqnum = SEQ;
-        packet.acknum = flip_number(ACK);
-        packet.checksum = generate_checksum(packet);
-    
+        packet.sequenceNumbernum = sequenceNumber;
+        packet.ack_numbernum = flip_number(ACK);
+        packet.checksum = make_checksum(packet);
         prev_packet = packet;
         
-        A_STATE = flip_number(A_STATE);
-        SEQ = flip_number(SEQ);
+        StateOfA = flip_number(StateOfA);
+        sequenceNumber = flip_number(sequenceNumber);
 
-        printf("\n#####################################\nA is going to send the following packet:\nSequence number: %d\nChecksum: %d\nMessage: %s\nThe ACK A is expecting to see is %d\n#####################################\n",packet.seqnum,packet.checksum,packet.payload,ACK);
+        printf("\n#####################################\nA is going to send the following packet:\nsequenceNumberuence number: %d\nChecksum: %d\nMessage: %s\nThe ACK A is expecting to see is %d\n#####################################\n",packet.sequenceNumbernum,packet.checksum,packet.payload,ACK);
 
         tolayer3(A, packet); 
         starttimer(A,TIMER);
@@ -101,8 +100,8 @@ int A_output(message)
 void A_input(packet)
   struct pkt packet;
 {
-    printf("\n#####################################\nA has received the ACK packet!\nACK: %d\nCurrent expected ACK: %d\n#####################################\n",packet.acknum,ACK);
-    if(packet.acknum == ACK && check_checksum(packet)){
+    printf("\n#####################################\nA has received the ACK packet!\nack_number: %d\nCurrent expected ACK: %d\n#####################################\n",packet.ack_numbernum,ACK);
+    if(packet.ack_numbernum == ACK && check_checksum(packet)){
         stoptimer(A);
         
         struct msg message;
@@ -110,7 +109,7 @@ void A_input(packet)
       //  printf("\n#####################################\nA has received the ACK # %d \n#####################################\n", ACK);
         
         ACK = flip_number(ACK);
-        A_STATE = flip_number(A_STATE);
+        StateOfA = flip_number(StateOfA);
         tolayer5(A,message);
     }
 }
@@ -119,7 +118,7 @@ void A_input(packet)
 void A_timerinterrupt()
 {
     printf("\n#####################################\nA timer has been interrupted, A will now resend the packet. \n#####################################\n");
-    //printf("\n#####################################\nA is going to send the following packet:\nSequence number: %d\nChecksum: %d\nMessage: %s\nThe ACK A is expecting to see is %d\n#####################################\n",prev_packet.seqnum,prev_packet.checksum,prev_packet.payload,ACK);
+    //printf("\n#####################################\nA is going to send the following packet:\nsequenceNumberuence number: %d\nChecksum: %d\nMessage: %s\nThe ACK A is expecting to see is %d\n#####################################\n",prev_packet.sequenceNumbernum,prev_packet.checksum,prev_packet.payload,ACK);
 
     tolayer3(A,prev_packet);
     starttimer(A,TIMER);
@@ -129,26 +128,26 @@ void A_timerinterrupt()
 /* entity A routines are called. You can use it to do any initialization */
 void A_init()
 {
-    A_STATE = 0;
+    StateOfA = 0;
     ACK = 0;
-    SEQ = 0;
+    sequenceNumber = 0;
 }
 
 /* used to check the checksum */
-int check_checksum(struct pkt package){
+int check_checksum(struct pkt pack_numberage){
     int i;
-    int sum = (package.seqnum + package.acknum);
-    for(i = 0; i < MESSAGE_SIZE; i++){
-        sum += (int)package.payload[i];
+    int sum = (pack_numberage.sequenceNumbernum + pack_numberage.ack_numbernum);
+    for(i = 0; i < MSG_LENGTH; i++){
+        sum += (int)pack_numberage.payload[i];
     }
-    return (sum == package.checksum);
+    return (sum == pack_numberage.checksum);
 }
 /* used to generate checksum */
-int generate_checksum(struct pkt package){
+int make_checksum(struct pkt pack_numberage){
     int i;
-    int sum = (package.seqnum + package.acknum);
-    for(i = 0; i < MESSAGE_SIZE; i++){
-        sum += (int)package.payload[i];
+    int sum = (pack_numberage.sequenceNumbernum + pack_numberage.ack_numbernum);
+    for(i = 0; i < MSG_LENGTH; i++){
+        sum += (int)pack_numberage.payload[i];
     }
     return sum;            
 }
@@ -162,28 +161,26 @@ int flip_number(int number){
 void B_input(packet)
   struct pkt packet;
 {
-    printf("\n#####################################\nB input here is the packet I received:\nSequence number: %d\nChecksum: %d\nMessage: %s\nThe ACK B is expecting to send is %d\n#####################################\n",packet.seqnum,packet.checksum,packet.payload,ACK);
+    printf("\n#####################################\nB input here is the packet I received:\nsequenceNumberuence number: %d\nChecksum: %d\nMessage: %s\nThe ACK B is expecting to send is %d\n#####################################\n",packet.sequenceNumbernum,packet.checksum,packet.payload,ACK);
 
-    //printf("B the checksum is %d\nB current state is %d\n",generate_checksum(packet),B_STATE);
-        if(check_checksum(packet) && packet.seqnum == B_STATE){
+    //printf("B the checksum is %d\nB current state is %d\n",make_checksum(packet),StateOfB);
+        if(check_checksum(packet) && packet.sequenceNumbernum == StateOfB){
             struct msg message;
             strcpy(message.data,packet.payload);
             
-            B_STATE = flip_number(B_STATE);
+            StateOfB = flip_number(StateOfB);
 
-            struct pkt ack_packet;
-            ack_packet.acknum = packet.seqnum;
-            ack_packet.checksum = generate_checksum(ack_packet);
+            struct pkt ack_number_packet;
+            ack_number_packet.ack_numbernum = packet.sequenceNumbernum;
+            ack_number_packet.checksum = make_checksum(ack_number_packet);
 
-            B_prev_packet = ack_packet;
+            B_prev_packet = ack_number_packet;
 
             printf("\n#####################################\n B is sending the ACK \n#####################################\n");
 
             count++;
             tolayer5(B,message);
-            tolayer3(B, ack_packet);
-            stoptimer(B);
-            starttimer(B,TIMER);
+            tolayer3(B, ack_number_packet);
         }else{printf("#####################################\nB is NOT accepting this packet!\n B has accepted the %d letter of the alphabet and is expecting the next\n#####################################\n",count);
         }
 
@@ -201,7 +198,7 @@ void B_timerinterrupt()
 /* entity B routines are called. You can use it to do any initialization */
 void B_init()
 {
-    B_STATE = 0;
+    StateOfB = 0;
 }
 
 
@@ -414,16 +411,16 @@ struct pkt packet;
  }  
 
 /* make a copy of the packet student just gave me since he/she may decide */
-/* to do something with the packet after we return back to him/her */ 
+/* to do something with the packet after we return back_number to him/her */ 
  mypktptr = (struct pkt *)malloc(sizeof(struct pkt));
- mypktptr->seqnum = packet.seqnum;
- mypktptr->acknum = packet.acknum;
+ mypktptr->sequenceNumbernum = packet.sequenceNumbernum;
+ mypktptr->ack_numbernum = packet.ack_numbernum;
  mypktptr->checksum = packet.checksum;
  for (i=0; i<20; i++)
     mypktptr->payload[i] = packet.payload[i];
  if (TRACE>2)  {
-   printf("          TOLAYER3: seq: %d, ack %d, check: %d ", mypktptr->seqnum,
-	  mypktptr->acknum,  mypktptr->checksum);
+   printf("          TOLAYER3: sequenceNumber: %d, ACK %d, check: %d ", mypktptr->sequenceNumbernum,
+	  mypktptr->ack_numbernum,  mypktptr->checksum);
     for (i=0; i<20; i++)
         printf("%c",mypktptr->payload[i]);
     printf("\n");
@@ -451,9 +448,9 @@ struct pkt packet;
     if ( (x = random_number()) < .75)
        mypktptr->payload[0]='Z';   /* corrupt payload */
       else if (x < .875)
-       mypktptr->seqnum = 999999;
+       mypktptr->sequenceNumbernum = 999999;
       else
-       mypktptr->acknum = 999999;
+       mypktptr->ack_numbernum = 999999;
     if (TRACE>0)    
 	printf("          TOLAYER3: packet being corrupted\n");
     }  
@@ -626,8 +623,8 @@ int main(void)
 	    }
 	}
           else if (eventptr->evtype ==  FROM_LAYER3) {
-            pkt2give.seqnum = eventptr->pktptr->seqnum;
-            pkt2give.acknum = eventptr->pktptr->acknum;
+            pkt2give.sequenceNumbernum = eventptr->pktptr->sequenceNumbernum;
+            pkt2give.ack_numbernum = eventptr->pktptr->ack_numbernum;
             pkt2give.checksum = eventptr->pktptr->checksum;
             for (i=0; i<20; i++)  
                 pkt2give.payload[i] = eventptr->pktptr->payload[i];
